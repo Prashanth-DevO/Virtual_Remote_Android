@@ -1,14 +1,13 @@
 import 'dart:typed_data';
 
 class ControlProtocol {
-  // Must match C++ protocol.h
+  // Must match server packet layout
   static const int unioMagic = 0x4F494E55; // 'UNIO'
   static const int version = 1;
   static const int size = 36;
 
   static int timestampUs() {
-    final now = DateTime.now().microsecondsSinceEpoch;
-    return now; // fits in uint64
+    return DateTime.now().microsecondsSinceEpoch;
   }
 
   static Uint8List buildPacket({
@@ -23,7 +22,6 @@ class ControlProtocol {
     required int dpadY,
     required int buttons,
   }) {
-    // clamp hard
     int clamp16(int v) => v < -32768 ? -32768 : (v > 32767 ? 32767 : v);
     int clampU8(int v) => v < 0 ? 0 : (v > 255 ? 255 : v);
     int clampI8(int v) => v < -1 ? -1 : (v > 1 ? 1 : v);
@@ -33,7 +31,6 @@ class ControlProtocol {
     bd.setUint32(0, unioMagic, Endian.little);
     bd.setUint16(4, version, Endian.little);
     bd.setUint16(6, size, Endian.little);
-
     bd.setUint32(8, seq, Endian.little);
     bd.setUint64(12, timestampUs(), Endian.little);
 
