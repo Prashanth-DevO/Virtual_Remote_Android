@@ -78,13 +78,13 @@ class _ControllerScreenState extends ConsumerState<ControllerScreen>
     final ctl = ref.read(controllerControllerProvider.notifier);
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0F131A),
+      backgroundColor: const Color(0xFFE8E2EC),
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.all(2),
+          padding: const EdgeInsets.all(10),
           child: Center(
-            child: AspectRatio(
-              aspectRatio: 16 / 9,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 1300),
               child: _XboxControllerSurface(
                 state: s,
                 onLeftStick: ctl.setLeftStick,
@@ -133,181 +133,161 @@ class _XboxControllerSurface extends StatelessWidget {
         double lf(double f) => w * f;
         double tf(double f) => h * f;
 
-        final stickSize = w * 0.19;
-        final dpadSize  = w * 0.16;
-        final faceSize  = w * 0.20;
+        final stickSize = math.min(w * 0.24, h * 0.39);
+        final l3r3Size = stickSize * 1.5;
+        final dpadSize = math.min(w * 0.17, h * 0.3);
+        final faceSize = math.min(w * 0.21, h * 0.34);
+        final centerControlWidth = (w * 0.38).clamp(250.0, 430.0);
+        final compactWidth = (centerControlWidth * 0.3).clamp(70.0, 112.0);
+        final compactHeight = (h * 0.08).clamp(38.0, 54.0);
+        final compactFontSize = (compactHeight * 0.34).clamp(14.0, 18.0);
+        final homeButtonSize = (h * 0.14).clamp(56.0, 84.0);
 
-        return DecoratedBox(
+        return Container(
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(38),
-            gradient: const LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [Color(0xFF35383D), Color(0xFF171A1F)],
-            ),
-            boxShadow: const [
-              BoxShadow(blurRadius: 18, offset: Offset(0, 10), color: Color(0x36000000)),
-            ],
+            color: const Color(0xFF151922),
+            borderRadius: BorderRadius.circular(48),
+            border: Border.all(color: const Color(0xFF414652), width: 4),
           ),
-          child: Stack(
-            children: [
-
-              // ── Decorative grip bars ─────────────────────────────────
-              Positioned(
-                left: lf(0.02), top: tf(0.30),
-                child: Container(
-                  width: w * 0.018, height: h * 0.55,
-                  decoration: BoxDecoration(color: const Color(0xFF2AA2FF), borderRadius: BorderRadius.circular(99)),
-                ),
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                color: const Color(0xFFEAE5EE),
+                borderRadius: BorderRadius.circular(34),
               ),
-              Positioned(
-                right: lf(0.02), top: tf(0.30),
-                child: Container(
-                  width: w * 0.018, height: h * 0.55,
-                  decoration: BoxDecoration(color: const Color(0xFFFF3B4D), borderRadius: BorderRadius.circular(99)),
-                ),
-              ),
-
-              // ── LB — far left, top ───────────────────────────────────
-              Positioned(
-                left: lf(0.04), top: tf(0.04),
-                width: w * 0.18, height: h * 0.14,
-                child: _PressButton(
-                  label: 'LB',
-                  active: _isOn(GamepadButton.l1),
-                  onChanged: (v) => onButton(GamepadButton.l1, v),
-                ),
-              ),
-
-              // ── LT — far left, below LB ──────────────────────────────
-              Positioned(
-                left: lf(0.04), top: tf(0.22),
-                width: w * 0.18, height: h * 0.14,
-                child: _TriggerSlider(label: 'LT', value: state.l2, onChanged: onL2Changed),
-              ),
-
-              // ── RB — far right, top ──────────────────────────────────
-              Positioned(
-                right: lf(0.04), top: tf(0.04),
-                width: w * 0.18, height: h * 0.14,
-                child: _PressButton(
-                  label: 'RB',
-                  active: _isOn(GamepadButton.r1),
-                  onChanged: (v) => onButton(GamepadButton.r1, v),
-                ),
-              ),
-
-              // ── RT — far right, below RB ─────────────────────────────
-              Positioned(
-                right: lf(0.04), top: tf(0.22),
-                width: w * 0.18, height: h * 0.14,
-                child: _TriggerSlider(label: 'RT', value: state.r2, onChanged: onR2Changed),
-              ),
-
-              // ── Xbox Home — centered, very top ───────────────────────
-              Positioned(
-                left: lf(0.5) - 18, top: tf(0.06),
-                width: 36, height: 36,
-                child: _MiniCenterButton(
-                  icon: Icons.radio_button_checked,
-                  active: _isOn(GamepadButton.home),
-                  onChanged: (v) => onButton(GamepadButton.home, v),
-                ),
-              ),
-
-              // ── Select / Start — center, upper-mid ───────────────────
-              Positioned(
-                left: lf(0.5) - w * 0.09, top: tf(0.30),
-                width: w * 0.18,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    _MiniCenterButton(
-                      icon: Icons.content_copy,
-                      active: _isOn(GamepadButton.select),
-                      onChanged: (v) => onButton(GamepadButton.select, v),
+              child: Stack(
+                children: [
+                  Positioned(
+                    left: lf(0.06),
+                    top: tf(0.07),
+                    width: w * 0.18,
+                    height: h * 0.10,
+                    child: _PressButton(
+                      label: 'LB',
+                      active: _isOn(GamepadButton.l1),
+                      onChanged: (v) => onButton(GamepadButton.l1, v),
                     ),
-                    _MiniCenterButton(
-                      icon: Icons.menu,
-                      active: _isOn(GamepadButton.start),
-                      onChanged: (v) => onButton(GamepadButton.start, v),
+                  ),
+                  Positioned(
+                    left: lf(0.06),
+                    top: tf(0.20),
+                    width: w * 0.05,
+                    height: h * 0.34,
+                    child: _TriggerSlider(
+                      label: 'LT',
+                      value: state.l2,
+                      onChanged: onL2Changed,
                     ),
-                  ],
-                ),
+                  ),
+                  Positioned(
+                    right: lf(0.06),
+                    top: tf(0.07),
+                    width: w * 0.18,
+                    height: h * 0.10,
+                    child: _PressButton(
+                      label: 'RB',
+                      active: _isOn(GamepadButton.r1),
+                      onChanged: (v) => onButton(GamepadButton.r1, v),
+                    ),
+                  ),
+                  Positioned(
+                    right: lf(0.06),
+                    top: tf(0.20),
+                    width: w * 0.05,
+                    height: h * 0.34,
+                    child: _TriggerSlider(
+                      label: 'RT',
+                      value: state.r2,
+                      onChanged: onR2Changed,
+                    ),
+                  ),
+                  Positioned(
+                    left: (w - centerControlWidth) / 2,
+                    top: tf(0.12),
+                    width: centerControlWidth,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        _PressButton(
+                          label: 'Back',
+                          active: _isOn(GamepadButton.select),
+                          onChanged: (v) => onButton(GamepadButton.select, v),
+                          compact: true,
+                          width: compactWidth,
+                          height: compactHeight,
+                          fontSize: compactFontSize,
+                        ),
+                        _MiniCenterButton(
+                          icon: Icons.close,
+                          active: _isOn(GamepadButton.home),
+                          onChanged: (v) => onButton(GamepadButton.home, v),
+                          size: homeButtonSize,
+                          iconSize: homeButtonSize * 0.62,
+                        ),
+                        _PressButton(
+                          label: 'Start',
+                          active: _isOn(GamepadButton.start),
+                          onChanged: (v) => onButton(GamepadButton.start, v),
+                          compact: true,
+                          width: compactWidth,
+                          height: compactHeight,
+                          fontSize: compactFontSize,
+                        ),
+                      ],
+                    ),
+                  ),
+                  Positioned(
+                    left: lf(0.07),
+                    bottom: tf(0.07),
+                    width: l3r3Size,
+                    height: l3r3Size,
+                    child: _AnalogStick(
+                      x: state.lx,
+                      y: state.ly,
+                      onChanged: onLeftStick,
+                      onReset: () => onLeftStick(0, 0),
+                      ringColor: const Color(0xFF2D323E),
+                      label: 'L3',
+                    ),
+                  ),
+                  Positioned(
+                    left: lf(0.28),
+                    bottom: tf(0.24),
+                    width: dpadSize,
+                    height: dpadSize,
+                    child: _Dpad(x: state.dpadX, y: state.dpadY, onChanged: onDpad),
+                  ),
+                  Positioned(
+                    right: lf(0.07),
+                    bottom: tf(0.07),
+                    width: l3r3Size,
+                    height: l3r3Size,
+                    child: _AnalogStick(
+                      x: state.rx,
+                      y: state.ry,
+                      onChanged: onRightStick,
+                      onReset: () => onRightStick(0, 0),
+                      ringColor: const Color(0xFF2D323E),
+                      label: 'R3',
+                    ),
+                  ),
+                  Positioned(
+                    right: lf(0.28),
+                    bottom: tf(0.24),
+                    width: faceSize,
+                    height: faceSize,
+                    child: _FaceButtons(
+                      a: _isOn(GamepadButton.a),
+                      b: _isOn(GamepadButton.b),
+                      x: _isOn(GamepadButton.x),
+                      y: _isOn(GamepadButton.y),
+                      onButton: onButton,
+                    ),
+                  ),
+                ],
               ),
-
-              // ── Left Analog Stick — center-left, vertically centered ──
-              Positioned(
-                left: lf(0.24),
-                top: tf(0.5) - stickSize / 2,
-                width: stickSize, height: stickSize,
-                child: _AnalogStick(
-                  x: state.lx, y: state.ly,
-                  onChanged: onLeftStick,
-                  onReset: () => onLeftStick(0, 0),
-                  ringColor: const Color(0xFF2AA2FF),
-                ),
-              ),
-
-              // ── D-pad — bottom-left ──────────────────────────────────
-              Positioned(
-                left: lf(0.06), bottom: tf(0.08),
-                width: dpadSize, height: dpadSize,
-                child: _Dpad(x: state.dpadX, y: state.dpadY, onChanged: onDpad),
-              ),
-
-              // ── Right Analog Stick — center-right, vertically centered ─
-              Positioned(
-                right: lf(0.24),
-                top: tf(0.5) - stickSize / 2,
-                width: stickSize, height: stickSize,
-                child: _AnalogStick(
-                  x: state.rx, y: state.ry,
-                  onChanged: onRightStick,
-                  onReset: () => onRightStick(0, 0),
-                  ringColor: const Color(0xFFFF3B4D),
-                ),
-              ),
-
-              // ── Face Buttons — far right, vertically centered ─────────
-              Positioned(
-                right: lf(0.04),
-                top: tf(0.5) - faceSize / 2,
-                width: faceSize, height: faceSize,
-                child: _FaceButtons(
-                  a: _isOn(GamepadButton.a),
-                  b: _isOn(GamepadButton.b),
-                  x: _isOn(GamepadButton.x),
-                  y: _isOn(GamepadButton.y),
-                  onButton: onButton,
-                ),
-              ),
-
-              // ── L3 — below left stick ────────────────────────────────
-              Positioned(
-                left: lf(0.24) + stickSize / 2 - 28,
-                bottom: tf(0.05),
-                child: _PressButton(
-                  label: 'L3',
-                  active: _isOn(GamepadButton.l3),
-                  onChanged: (v) => onButton(GamepadButton.l3, v),
-                  compact: true,
-                ),
-              ),
-
-              // ── R3 — below right stick ───────────────────────────────
-              Positioned(
-                right: lf(0.24) + stickSize / 2 - 28,
-                bottom: tf(0.05),
-                child: _PressButton(
-                  label: 'R3',
-                  active: _isOn(GamepadButton.r3),
-                  onChanged: (v) => onButton(GamepadButton.r3, v),
-                  compact: true,
-                ),
-              ),
-
-            ],
+            ),
           ),
         );
       },
@@ -320,12 +300,18 @@ class _PressButton extends StatelessWidget {
   final bool active;
   final ValueChanged<bool> onChanged;
   final bool compact;
+  final double? width;
+  final double? height;
+  final double? fontSize;
 
   const _PressButton({
     required this.label,
     required this.active,
     required this.onChanged,
     this.compact = false,
+    this.width,
+    this.height,
+    this.fontSize,
   });
 
   @override
@@ -336,21 +322,20 @@ class _PressButton extends StatelessWidget {
       onTapCancel: () => onChanged(false),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 70),
-        width: compact ? 56 : null,
-        height: compact ? 30 : null,
+        width: width ?? (compact ? 120 : null),
+        height: height ?? (compact ? 56 : null),
         decoration: BoxDecoration(
           color: active
               ? Theme.of(context).colorScheme.primaryContainer
-              : const Color(0xFF232831),
-          borderRadius: BorderRadius.circular(compact ? 16 : 12),
-          border: Border.all(color: const Color(0xFF4C5360)),
+              : const Color(0xFF2D313B),
+          borderRadius: BorderRadius.circular(compact ? 28 : 16),
         ),
         alignment: Alignment.center,
         child: Text(
           label,
           style: TextStyle(
             fontWeight: FontWeight.w700,
-            fontSize: compact ? 11 : 12,
+            fontSize: fontSize ?? (compact ? 18 : 16),
             color: Colors.white,
           ),
         ),
@@ -363,11 +348,15 @@ class _MiniCenterButton extends StatelessWidget {
   final IconData icon;
   final bool active;
   final ValueChanged<bool> onChanged;
+  final double size;
+  final double iconSize;
 
   const _MiniCenterButton({
     required this.icon,
     required this.active,
     required this.onChanged,
+    this.size = 92,
+    this.iconSize = 58,
   });
 
   @override
@@ -378,16 +367,15 @@ class _MiniCenterButton extends StatelessWidget {
       onTapCancel: () => onChanged(false),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 70),
-        width: 28,
-        height: 28,
+        width: size,
+        height: size,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           color: active
               ? Theme.of(context).colorScheme.primary
-              : const Color(0xFF20252D),
-          border: Border.all(color: const Color(0xFF4C5360)),
+              : const Color(0xFF2A2E38),
         ),
-        child: Icon(icon, size: 15, color: Colors.white),
+        child: Icon(icon, size: iconSize, color: Colors.white),
       ),
     );
   }
@@ -406,32 +394,56 @@ class _TriggerSlider extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: const Color(0xFF232831),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFF4C5360)),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 8),
-        child: Row(
-          children: [
-            Text(
-              label,
-              style: const TextStyle(color: Colors.white70, fontSize: 11),
+    void updateValue(Offset local, double height) {
+      final normalized = (1 - (local.dy / height)).clamp(0.0, 1.0);
+      onChanged((normalized * 255).round());
+    }
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final dragHeight = constraints.maxHeight;
+
+        return GestureDetector(
+          onVerticalDragStart: (d) => updateValue(d.localPosition, dragHeight),
+          onVerticalDragUpdate: (d) => updateValue(d.localPosition, dragHeight),
+          onVerticalDragEnd: (_) => onChanged(0),
+          child: Container(
+            decoration: BoxDecoration(
+              color: const Color(0xFF2D313B),
+              borderRadius: BorderRadius.circular(28),
             ),
-            Expanded(
-              child: SliderTheme(
-                data: SliderTheme.of(context).copyWith(trackHeight: 3),
-                child: Slider(
-                  value: value / 255,
-                  onChanged: (v) => onChanged((v * 255).round()),
+            child: Stack(
+              alignment: Alignment.bottomCenter,
+              children: [
+                FractionallySizedBox(
+                  heightFactor: value / 255,
+                  widthFactor: 1,
+                  alignment: Alignment.bottomCenter,
+                  child: Container(
+                    decoration: const BoxDecoration(
+                      color: Color(0xFF464C58),
+                      borderRadius: BorderRadius.vertical(bottom: Radius.circular(28)),
+                    ),
+                  ),
                 ),
-              ),
+                Center(
+                  child: RotatedBox(
+                    quarterTurns: 3,
+                    child: Text(
+                      label,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 }
@@ -550,9 +562,7 @@ class _RoundGameButton extends StatelessWidget {
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           color: active ? tint : const Color(0xFF232831),
-          border: Border.all(
-            color: active ? Colors.white : const Color(0xFF525A68),
-          ),
+          border: Border.all(color: const Color(0xFF525A68)),
           boxShadow: active
               ? [
                   BoxShadow(
@@ -603,7 +613,6 @@ class _Dpad extends StatelessWidget {
             decoration: BoxDecoration(
               color: active ? const Color(0xFF3A414D) : const Color(0xFF262C35),
               borderRadius: BorderRadius.circular(6),
-              border: Border.all(color: const Color(0xFF555D6D)),
             ),
             alignment: Alignment.center,
             child: Text(
@@ -649,7 +658,6 @@ class _Dpad extends StatelessWidget {
             decoration: BoxDecoration(
               color: const Color(0xFF1D2229),
               borderRadius: BorderRadius.circular(6),
-              border: Border.all(color: const Color(0xFF555D6D)),
             ),
           ),
         ),
@@ -664,6 +672,7 @@ class _AnalogStick extends StatelessWidget {
   final void Function(int x, int y) onChanged;
   final VoidCallback onReset;
   final Color ringColor;
+  final String label;
 
   const _AnalogStick({
     required this.x,
@@ -671,6 +680,7 @@ class _AnalogStick extends StatelessWidget {
     required this.onChanged,
     required this.onReset,
     required this.ringColor,
+    required this.label,
   });
 
   @override
@@ -705,18 +715,18 @@ class _AnalogStick extends StatelessWidget {
           child: DecoratedBox(
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: const Color(0xFF20252D),
-              border: Border.all(color: ringColor, width: 2),
+              color: const Color(0xFF2C313B),
+              border: Border.all(color: ringColor, width: 2.5),
             ),
             child: Stack(
               children: [
                 Center(
-                  child: Container(
-                    width: 8,
-                    height: 8,
-                    decoration: const BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Colors.white38,
+                  child: Text(
+                    label,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 20,
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
                 ),
@@ -724,11 +734,11 @@ class _AnalogStick extends StatelessWidget {
                   left: radius + (normX * (radius - 17)) - 17,
                   top: radius + (normY * (radius - 17)) - 17,
                   child: Container(
-                    width: 34,
-                    height: 34,
+                    width: 30,
+                    height: 30,
                     decoration: const BoxDecoration(
                       shape: BoxShape.circle,
-                      color: Color(0xFF7A808A),
+                      color: Color(0xAA7A808A),
                     ),
                   ),
                 ),
