@@ -133,21 +133,17 @@ class _XboxControllerSurface extends StatelessWidget {
         double lf(double f) => w * f;
         double tf(double f) => h * f;
 
-        final stickSize = math.min(w * 0.24, h * 0.39);
-        final l3r3Size = stickSize * 1.5;
+        final stickSize = math.min(w * 0.29, h * 0.60);
         final dpadSize = math.min(w * 0.17, h * 0.3);
         final faceSize = math.min(w * 0.21, h * 0.34);
-        final centerControlWidth = (w * 0.38).clamp(250.0, 430.0);
-        final compactWidth = (centerControlWidth * 0.3).clamp(70.0, 112.0);
-        final compactHeight = (h * 0.08).clamp(38.0, 54.0);
-        final compactFontSize = (compactHeight * 0.34).clamp(14.0, 18.0);
-        final homeButtonSize = (h * 0.14).clamp(56.0, 84.0);
+        final shoulderTop = tf(0.10);
+        final triggerTop = tf(0.18);
+        final triggerHeight = h * 0.22;
 
         return Container(
           decoration: BoxDecoration(
             color: const Color(0xFF151922),
             borderRadius: BorderRadius.circular(48),
-            border: Border.all(color: const Color(0xFF414652), width: 4),
           ),
           child: Padding(
             padding: const EdgeInsets.all(12),
@@ -160,7 +156,7 @@ class _XboxControllerSurface extends StatelessWidget {
                 children: [
                   Positioned(
                     left: lf(0.06),
-                    top: tf(0.07),
+                    top: shoulderTop,
                     width: w * 0.18,
                     height: h * 0.10,
                     child: _PressButton(
@@ -171,9 +167,9 @@ class _XboxControllerSurface extends StatelessWidget {
                   ),
                   Positioned(
                     left: lf(0.06),
-                    top: tf(0.20),
+                    top: triggerTop,
                     width: w * 0.05,
-                    height: h * 0.34,
+                    height: triggerHeight,
                     child: _TriggerSlider(
                       label: 'LT',
                       value: state.l2,
@@ -182,7 +178,7 @@ class _XboxControllerSurface extends StatelessWidget {
                   ),
                   Positioned(
                     right: lf(0.06),
-                    top: tf(0.07),
+                    top: shoulderTop,
                     width: w * 0.18,
                     height: h * 0.10,
                     child: _PressButton(
@@ -193,9 +189,9 @@ class _XboxControllerSurface extends StatelessWidget {
                   ),
                   Positioned(
                     right: lf(0.06),
-                    top: tf(0.20),
+                    top: triggerTop,
                     width: w * 0.05,
-                    height: h * 0.34,
+                    height: triggerHeight,
                     child: _TriggerSlider(
                       label: 'RT',
                       value: state.r2,
@@ -203,9 +199,9 @@ class _XboxControllerSurface extends StatelessWidget {
                     ),
                   ),
                   Positioned(
-                    left: (w - centerControlWidth) / 2,
-                    top: tf(0.12),
-                    width: centerControlWidth,
+                    left: lf(0.5) - (w * 0.20),
+                    top: tf(0.19),
+                    width: w * 0.40,
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -214,34 +210,26 @@ class _XboxControllerSurface extends StatelessWidget {
                           active: _isOn(GamepadButton.select),
                           onChanged: (v) => onButton(GamepadButton.select, v),
                           compact: true,
-                          width: compactWidth,
-                          height: compactHeight,
-                          fontSize: compactFontSize,
                         ),
                         _MiniCenterButton(
                           icon: Icons.close,
                           active: _isOn(GamepadButton.home),
                           onChanged: (v) => onButton(GamepadButton.home, v),
-                          size: homeButtonSize,
-                          iconSize: homeButtonSize * 0.62,
                         ),
                         _PressButton(
                           label: 'Start',
                           active: _isOn(GamepadButton.start),
                           onChanged: (v) => onButton(GamepadButton.start, v),
                           compact: true,
-                          width: compactWidth,
-                          height: compactHeight,
-                          fontSize: compactFontSize,
                         ),
                       ],
                     ),
                   ),
                   Positioned(
-                    left: lf(0.07),
-                    bottom: tf(0.07),
-                    width: l3r3Size,
-                    height: l3r3Size,
+                    left: lf(0.05),
+                    bottom: tf(0.02),
+                    width: stickSize,
+                    height: stickSize,
                     child: _AnalogStick(
                       x: state.lx,
                       y: state.ly,
@@ -252,17 +240,21 @@ class _XboxControllerSurface extends StatelessWidget {
                     ),
                   ),
                   Positioned(
-                    left: lf(0.28),
-                    bottom: tf(0.24),
+                    left: lf(0.345),
+                    bottom: tf(0.23),
                     width: dpadSize,
                     height: dpadSize,
-                    child: _Dpad(x: state.dpadX, y: state.dpadY, onChanged: onDpad),
+                    child: _Dpad(
+                      x: state.dpadX,
+                      y: state.dpadY,
+                      onChanged: onDpad,
+                    ),
                   ),
                   Positioned(
-                    right: lf(0.07),
-                    bottom: tf(0.07),
-                    width: l3r3Size,
-                    height: l3r3Size,
+                    right: lf(0.05),
+                    bottom: tf(0.02),
+                    width: stickSize,
+                    height: stickSize,
                     child: _AnalogStick(
                       x: state.rx,
                       y: state.ry,
@@ -273,8 +265,8 @@ class _XboxControllerSurface extends StatelessWidget {
                     ),
                   ),
                   Positioned(
-                    right: lf(0.28),
-                    bottom: tf(0.24),
+                    right: lf(0.34),
+                    top: tf(0.40),
                     width: faceSize,
                     height: faceSize,
                     child: _FaceButtons(
@@ -300,18 +292,12 @@ class _PressButton extends StatelessWidget {
   final bool active;
   final ValueChanged<bool> onChanged;
   final bool compact;
-  final double? width;
-  final double? height;
-  final double? fontSize;
 
   const _PressButton({
     required this.label,
     required this.active,
     required this.onChanged,
     this.compact = false,
-    this.width,
-    this.height,
-    this.fontSize,
   });
 
   @override
@@ -322,8 +308,8 @@ class _PressButton extends StatelessWidget {
       onTapCancel: () => onChanged(false),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 70),
-        width: width ?? (compact ? 120 : null),
-        height: height ?? (compact ? 56 : null),
+        width: compact ? 120 : null,
+        height: compact ? 56 : null,
         decoration: BoxDecoration(
           color: active
               ? Theme.of(context).colorScheme.primaryContainer
@@ -335,7 +321,7 @@ class _PressButton extends StatelessWidget {
           label,
           style: TextStyle(
             fontWeight: FontWeight.w700,
-            fontSize: fontSize ?? (compact ? 18 : 16),
+            fontSize: compact ? 18 : 16,
             color: Colors.white,
           ),
         ),
@@ -348,15 +334,11 @@ class _MiniCenterButton extends StatelessWidget {
   final IconData icon;
   final bool active;
   final ValueChanged<bool> onChanged;
-  final double size;
-  final double iconSize;
 
   const _MiniCenterButton({
     required this.icon,
     required this.active,
     required this.onChanged,
-    this.size = 92,
-    this.iconSize = 58,
   });
 
   @override
@@ -367,15 +349,15 @@ class _MiniCenterButton extends StatelessWidget {
       onTapCancel: () => onChanged(false),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 70),
-        width: size,
-        height: size,
+        width: 92,
+        height: 92,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           color: active
               ? Theme.of(context).colorScheme.primary
               : const Color(0xFF2A2E38),
         ),
-        child: Icon(icon, size: iconSize, color: Colors.white),
+        child: Icon(icon, size: 58, color: Colors.white),
       ),
     );
   }
@@ -422,7 +404,9 @@ class _TriggerSlider extends StatelessWidget {
                   child: Container(
                     decoration: const BoxDecoration(
                       color: Color(0xFF464C58),
-                      borderRadius: BorderRadius.vertical(bottom: Radius.circular(28)),
+                      borderRadius: BorderRadius.vertical(
+                        bottom: Radius.circular(28),
+                      ),
                     ),
                   ),
                 ),
@@ -689,6 +673,7 @@ class _AnalogStick extends StatelessWidget {
       builder: (context, constraints) {
         final size = constraints.biggest.shortestSide;
         final radius = size / 2;
+        final labelFontSize = (size * 0.24).clamp(26.0, 38.0);
         final normX = x / 32767.0;
         final normY = y / 32767.0;
 
@@ -723,9 +708,9 @@ class _AnalogStick extends StatelessWidget {
                 Center(
                   child: Text(
                     label,
-                    style: const TextStyle(
+                    style: TextStyle(
                       color: Colors.white,
-                      fontSize: 20,
+                      fontSize: labelFontSize,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
