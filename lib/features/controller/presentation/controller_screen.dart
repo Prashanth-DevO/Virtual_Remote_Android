@@ -8,6 +8,8 @@ import '../../discovery/domain/discovered_server.dart';
 import '../domain/controller_state.dart';
 import 'controller_controller.dart';
 
+enum _ControlMode { character, vehicle }
+
 class ControllerScreen extends ConsumerStatefulWidget {
   final DiscoveredServer server;
   const ControllerScreen({super.key, required this.server});
@@ -18,6 +20,8 @@ class ControllerScreen extends ConsumerStatefulWidget {
 
 class _ControllerScreenState extends ConsumerState<ControllerScreen>
     with WidgetsBindingObserver {
+  _ControlMode _mode = _ControlMode.character;
+
   Future<void> _lockLandscape() async {
     await SystemChrome.setPreferredOrientations(const [
       DeviceOrientation.landscapeLeft,
@@ -75,7 +79,6 @@ class _ControllerScreenState extends ConsumerState<ControllerScreen>
   @override
   Widget build(BuildContext context) {
     final s = ref.watch(controllerControllerProvider);
-    final ctl = ref.read(controllerControllerProvider.notifier);
 
     return Scaffold(
       backgroundColor: const Color(0xFFE8E2EC),
@@ -85,25 +88,74 @@ class _ControllerScreenState extends ConsumerState<ControllerScreen>
           child: Center(
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 1300),
-              child: _XboxControllerSurface(
-                state: s,
-                onLeftStick: ctl.setLeftStick,
-                onRightStick: ctl.setRightStick,
-                onL2Changed: ctl.setTriggerL2,
-                onR2Changed: ctl.setTriggerR2,
-                onButton: ctl.setButtonBit,
-                onDpad: ctl.setDpad,
-              ),
+              child: _mode == _ControlMode.character
+                  ? _CharacterControllerSurface(
+                      state: s,
+                      onModeChanged: _setMode,
+                      onLeftStick: _onLeftStick,
+                      onRightStick: _onRightStick,
+                      onL2Changed: _onL2Changed,
+                      onR2Changed: _onR2Changed,
+                      onButton: _onButton,
+                      onDpad: _onDpad,
+                    )
+                  : _VehicleControllerSurface(
+                      state: s,
+                      onModeChanged: _setMode,
+                      onL2Changed: _onL2Changed,
+                      onR2Changed: _onR2Changed,
+                      onButton: _onButton,
+                      onSteerChanged: _onVehicleSteerChanged,
+                    ),
             ),
           ),
         ),
       ),
     );
   }
+
+  void _setMode(_ControlMode mode) {
+    if (_mode == mode) return;
+    setState(() => _mode = mode);
+    ref.read(controllerControllerProvider.notifier).resetNeutralAndSend();
+  }
+
+  void _onLeftStick(int x, int y) {
+    ref.read(controllerControllerProvider.notifier).setLeftStick(x, y);
+  }
+
+  void _onRightStick(int x, int y) {
+    ref.read(controllerControllerProvider.notifier).setRightStick(x, y);
+  }
+
+  void _onL2Changed(int value) {
+    ref.read(controllerControllerProvider.notifier).setTriggerL2(value);
+  }
+
+  void _onR2Changed(int value) {
+    ref.read(controllerControllerProvider.notifier).setTriggerR2(value);
+  }
+
+  void _onButton(int bit, bool pressed) {
+    ref.read(controllerControllerProvider.notifier).setButtonBit(bit, pressed);
+  }
+
+  void _onDpad(int x, int y) {
+    ref.read(controllerControllerProvider.notifier).setDpad(x, y);
+  }
+
+  void _onVehicleSteerChanged(int dirX) {
+    final ctl = ref.read(controllerControllerProvider.notifier);
+    // Keep D-pad neutral in vehicle mode to avoid triggering linked
+    // left/right D-pad actions while steering.
+    ctl.setDpad(0, 0);
+    ctl.setLeftStick(dirX * 32767, 0);
+  }
 }
 
-class _XboxControllerSurface extends StatelessWidget {
+class _CharacterControllerSurface extends StatelessWidget {
   final ControllerState state;
+  final ValueChanged<_ControlMode> onModeChanged;
   final void Function(int x, int y) onLeftStick;
   final void Function(int x, int y) onRightStick;
   final ValueChanged<int> onL2Changed;
@@ -111,8 +163,9 @@ class _XboxControllerSurface extends StatelessWidget {
   final void Function(int bit, bool pressed) onButton;
   final void Function(int x, int y) onDpad;
 
-  const _XboxControllerSurface({
+  const _CharacterControllerSurface({
     required this.state,
+    required this.onModeChanged,
     required this.onLeftStick,
     required this.onRightStick,
     required this.onL2Changed,
@@ -154,6 +207,16 @@ class _XboxControllerSurface extends StatelessWidget {
               ),
               child: Stack(
                 children: [
+                  Positioned(
+                    left: lf(0.5) - (w * 0.11),
+                    top: tf(0.03),
+                    width: w * 0.22,
+                    height: h * 0.08,
+                    child: _ModeToggle(
+                      mode: _ControlMode.character,
+                      onChanged: onModeChanged,
+                    ),
+                  ),
                   Positioned(
                     left: lf(0.06),
                     top: shoulderTop,
@@ -285,6 +348,347 @@ class _XboxControllerSurface extends StatelessWidget {
       },
     );
   }
+}
+
+class _VehicleControllerSurface extends StatelessWidget {
+  final ControllerState state;
+  final ValueChanged<_ControlMode> onModeChanged;
+  final ValueChanged<int> onL2Changed;
+  final ValueChanged<int> onR2Changed;
+  final void Function(int bit, bool pressed) onButton;
+  final ValueChanged<int> onSteerChanged;
+
+  const _VehicleControllerSurface({
+    required this.state,
+    required this.onModeChanged,
+    required this.onL2Changed,
+    required this.onR2Changed,
+    required this.onButton,
+    required this.onSteerChanged,
+  });
+
+  bool _isOn(int bit) => (state.buttons & (1 << bit)) != 0;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final w = constraints.maxWidth;
+        final h = constraints.maxHeight;
+
+        double lf(double f) => w * f;
+        double tf(double f) => h * f;
+        final steeringWidth = (w * 0.36).clamp(300.0, 460.0).toDouble();
+        final steeringHeight = (h * 0.20).clamp(110.0, 180.0).toDouble();
+        final pedalRowWidth = (w * 0.30).clamp(280.0, 420.0).toDouble();
+        final pedalRowHeight = (h * 0.25).clamp(120.0, 210.0).toDouble();
+
+        return Container(
+          decoration: BoxDecoration(
+            color: const Color(0xFF151922),
+            borderRadius: BorderRadius.circular(48),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                color: const Color(0xFFEAE5EE),
+                borderRadius: BorderRadius.circular(34),
+              ),
+              child: Stack(
+                children: [
+                  Positioned(
+                    left: lf(0.5) - (w * 0.11),
+                    top: tf(0.03),
+                    width: w * 0.22,
+                    height: h * 0.08,
+                    child: _ModeToggle(
+                      mode: _ControlMode.vehicle,
+                      onChanged: onModeChanged,
+                    ),
+                  ),
+                  Positioned(
+                    left: lf(0.06),
+                    top: tf(0.10),
+                    width: w * 0.18,
+                    height: h * 0.08,
+                    child: _PressButton(
+                      label: 'LB',
+                      active: _isOn(GamepadButton.l1),
+                      onChanged: (v) => onButton(GamepadButton.l1, v),
+                    ),
+                  ),
+                  Positioned(
+                    right: lf(0.06),
+                    top: tf(0.10),
+                    width: w * 0.18,
+                    height: h * 0.08,
+                    child: _PressButton(
+                      label: 'RB',
+                      active: _isOn(GamepadButton.r1),
+                      onChanged: (v) => onButton(GamepadButton.r1, v),
+                    ),
+                  ),
+                  Positioned(
+                    left: lf(0.5) - (w * 0.20),
+                    top: tf(0.20),
+                    width: w * 0.40,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        _PressButton(
+                          label: 'Back',
+                          active: _isOn(GamepadButton.select),
+                          onChanged: (v) => onButton(GamepadButton.select, v),
+                          compact: true,
+                        ),
+                        _MiniCenterButton(
+                          icon: Icons.close,
+                          active: _isOn(GamepadButton.home),
+                          onChanged: (v) => onButton(GamepadButton.home, v),
+                        ),
+                        _PressButton(
+                          label: 'Start',
+                          active: _isOn(GamepadButton.start),
+                          onChanged: (v) => onButton(GamepadButton.start, v),
+                          compact: true,
+                        ),
+                      ],
+                    ),
+                  ),
+                  Positioned(
+                    left: lf(0.05),
+                    bottom: tf(0.06),
+                    width: steeringWidth,
+                    height: steeringHeight,
+                    child: _VehicleSteeringArrows(
+                      directionX: state.dpadX,
+                      onChanged: onSteerChanged,
+                    ),
+                  ),
+                  Positioned(
+                    right: lf(0.05),
+                    bottom: tf(0.05),
+                    width: pedalRowWidth,
+                    height: pedalRowHeight,
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: _PedalButton(
+                            label: 'LT',
+                            value: state.l2,
+                            onChanged: onL2Changed,
+                          ),
+                        ),
+                        const SizedBox(width: 22),
+                        Expanded(
+                          child: _PedalButton(
+                            label: 'RT',
+                            value: state.r2,
+                            onChanged: onR2Changed,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _ModeToggle extends StatelessWidget {
+  final _ControlMode mode;
+  final ValueChanged<_ControlMode> onChanged;
+
+  const _ModeToggle({required this.mode, required this.onChanged});
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: const Color(0xFFDDD7E2),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(4),
+        child: Row(
+          children: [
+            Expanded(
+              child: _ModeToggleChip(
+                label: 'Character',
+                active: mode == _ControlMode.character,
+                onTap: () => onChanged(_ControlMode.character),
+              ),
+            ),
+            const SizedBox(width: 4),
+            Expanded(
+              child: _ModeToggleChip(
+                label: 'Vehicle',
+                active: mode == _ControlMode.vehicle,
+                onTap: () => onChanged(_ControlMode.vehicle),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ModeToggleChip extends StatelessWidget {
+  final String label;
+  final bool active;
+  final VoidCallback onTap;
+
+  const _ModeToggleChip({
+    required this.label,
+    required this.active,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 120),
+        padding: const EdgeInsets.symmetric(vertical: 4),
+        decoration: BoxDecoration(
+          color: active ? const Color(0xFF0F8D85) : const Color(0xFF2D313B),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        alignment: Alignment.center,
+        child: Text(
+          label,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 12,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _VehicleSteeringArrows extends StatelessWidget {
+  final int directionX;
+  final ValueChanged<int> onChanged;
+
+  const _VehicleSteeringArrows({
+    required this.directionX,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    Widget arrow({
+      required IconData icon,
+      required bool active,
+      required int direction,
+    }) {
+      return Expanded(
+        child: GestureDetector(
+          onTapDown: (_) => onChanged(direction),
+          onTapUp: (_) => onChanged(0),
+          onTapCancel: () => onChanged(0),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 80),
+            margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+            decoration: BoxDecoration(
+              color: active ? const Color(0xFF2F3440) : const Color(0xFF1E2026),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Icon(icon, size: 68, color: Colors.white),
+          ),
+        ),
+      );
+    }
+
+    return Row(
+      children: [
+        arrow(
+          icon: Icons.keyboard_arrow_left,
+          active: directionX == -1,
+          direction: -1,
+        ),
+        arrow(
+          icon: Icons.keyboard_arrow_right,
+          active: directionX == 1,
+          direction: 1,
+        ),
+      ],
+    );
+  }
+}
+
+class _PedalButton extends StatelessWidget {
+  final String label;
+  final int value;
+  final ValueChanged<int> onChanged;
+
+  const _PedalButton({
+    required this.label,
+    required this.value,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final active = value > 0;
+    return GestureDetector(
+      onTapDown: (_) => onChanged(255),
+      onTapUp: (_) => onChanged(0),
+      onTapCancel: () => onChanged(0),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 80),
+        decoration: BoxDecoration(
+          color: active ? const Color(0xFFC8C8CB) : const Color(0xFFE0E0E3),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: const Color(0xFF8B8C90), width: 1.5),
+        ),
+        child: CustomPaint(
+          painter: _PedalLinePainter(),
+          child: Center(
+            child: Text(
+              label,
+              style: const TextStyle(
+                color: Color(0xFF2D313B),
+                fontWeight: FontWeight.w800,
+                fontSize: 22,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _PedalLinePainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final p = Paint()
+      ..color = const Color(0xFF3D4047)
+      ..strokeWidth = 6
+      ..strokeCap = StrokeCap.round;
+    for (var i = 0; i < 5; i++) {
+      final x = size.width * (0.16 + (i * 0.17));
+      canvas.drawLine(
+        Offset(x, size.height * 0.14),
+        Offset(x, size.height * 0.86),
+        p,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
 class _PressButton extends StatelessWidget {

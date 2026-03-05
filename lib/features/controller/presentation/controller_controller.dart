@@ -75,6 +75,10 @@ class ControllerController extends StateNotifier<ControllerState> {
     state = ControllerState.neutral();
   }
 
+  void resetNeutralAndSend() {
+    _setStateAndSend(ControllerState.neutral());
+  }
+
   bool get isConnected => _sender != null && _sender!.isRunning;
 
   void disconnect() {

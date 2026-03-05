@@ -66,7 +66,7 @@ class DiscoveryService {
         flags: parsed.flags,
         nonce: parsed.nonce,
         serverId: serverIdBig,
-        name: parsed.name.isEmpty ? 'linux-joystick' : parsed.name,
+        name: parsed.name.isEmpty ? 'LINUX_VIRTUAL_BOX 🎮' : parsed.name,
         seenAt: DateTime.now(),
       );
 

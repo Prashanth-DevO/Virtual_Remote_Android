@@ -75,7 +75,7 @@ class DiscoveryProtocol {
     try {
       return String.fromCharCodes(bytes).trim();
     } catch (_) {
-      return 'linux-joystick';
+      return 'LINUX_VIRTUAL_BOX 🎮';
     }
   }
 }
