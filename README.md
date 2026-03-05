@@ -61,21 +61,6 @@ flutter pub get
 flutter run
 ```
 
-## Important Release Note
-
-Currently `INTERNET` permission is present in:
-
-- `android/app/src/debug/AndroidManifest.xml`
-- `android/app/src/profile/AndroidManifest.xml`
-
-For release APK/network use, also add it to:
-
-- `android/app/src/main/AndroidManifest.xml`
-
-```xml
-<uses-permission android:name="android.permission.INTERNET"/>
-```
-
 ## Troubleshooting
 
 - No server found:
