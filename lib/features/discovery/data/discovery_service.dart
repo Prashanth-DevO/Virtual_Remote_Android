@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:io';
 import 'dart:math';
-import 'dart:typed_data';
 
 import '../domain/discovered_server.dart';
 import 'discovery_protocol.dart';
