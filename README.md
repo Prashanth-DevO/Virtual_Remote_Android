@@ -4,19 +4,10 @@ Mobile controller app that discovers a Linux joystick server on local network an
 
 ## Demo Photos
 
-Add your screenshots to `docs/demo/` with these names:
-
-- `01-server-terminal.png`
-- `02-discovery-screen.png`
-- `03-character-mode.png`
-- `04-vehicle-mode.png`
-
-Then this README will render them automatically:
-
-![Server Terminal](docs/demo/01-server-terminal.png)
-![Discovery Screen](docs/demo/02-discovery-screen.png)
-![Character Mode](docs/demo/03-character-mode.png)
-![Vehicle Mode](docs/demo/04-vehicle-mode.png)
+![Server Terminal](docs/demmo/server.png)
+![Discovery Screen](docs/demo/findserver.jpeg)
+![Character Mode](docs/demo/character_surface.jpeg)
+![Vehicle Mode](docs/demo/vechicle_surface.png)
 
 ## Quick Start (Your 4 Steps)
 
