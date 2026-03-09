@@ -36,7 +36,7 @@ class DiscoveryScreen extends ConsumerWidget {
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(12),
-              color: Colors.red.withOpacity(0.1),
+              color: Colors.red.withValues(alpha: 0.1),
               child: Text(st.error!, style: const TextStyle(color: Colors.red)),
             ),
           Padding(
@@ -95,7 +95,7 @@ class DiscoveryScreen extends ConsumerWidget {
             )
                 : ListView.separated(
               itemCount: st.servers.length,
-              separatorBuilder: (_, __) => const Divider(height: 1),
+              separatorBuilder: (context, index) => const Divider(height: 1),
               itemBuilder: (context, i) => _ServerTile(server: st.servers[i]),
             ),
           ),
@@ -120,9 +120,9 @@ class _ServerTile extends StatelessWidget {
       trailing: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
         decoration: BoxDecoration(
-          color: lockColor.withOpacity(0.12),
+          color: lockColor.withValues(alpha: 0.12),
           borderRadius: BorderRadius.circular(999),
-          border: Border.all(color: lockColor.withOpacity(0.5)),
+          border: Border.all(color: lockColor.withValues(alpha: 0.5)),
         ),
         child: Text(
           lockText,

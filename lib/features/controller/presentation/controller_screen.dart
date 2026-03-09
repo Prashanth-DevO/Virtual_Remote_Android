@@ -43,14 +43,8 @@ class _ControllerScreenState extends ConsumerState<ControllerScreen>
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _lockLandscape();
-
     Future.microtask(() {
-      ref
-          .read(controllerControllerProvider.notifier)
-          .connectAndStart(
-            ip: widget.server.ip,
-            port: widget.server.controlPort,
-          );
+      _startControl();
     });
   }
 
@@ -69,11 +63,16 @@ class _ControllerScreenState extends ConsumerState<ControllerScreen>
         state == AppLifecycleState.inactive) {
       ctl.disconnect();
     } else if (state == AppLifecycleState.resumed) {
-      ctl.connectAndStart(
-        ip: widget.server.ip,
-        port: widget.server.controlPort,
-      );
+      _startControl();
     }
+  }
+
+  Future<void> _startControl() async {
+    final ctl = ref.read(controllerControllerProvider.notifier);
+    await ctl.connectAndStart(
+      ip: widget.server.ip,
+      port: widget.server.controlPort,
+    );
   }
 
   @override

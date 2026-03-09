@@ -24,8 +24,6 @@ class DiscoveredServer {
   });
 
   bool get pairedLocked => (flags & (1 << 2)) != 0;
-  bool get supportsFeedback => (flags & (1 << 0)) != 0;
-  bool get supportsRumble => (flags & (1 << 1)) != 0;
 
   DiscoveredServer copyWith({DateTime? seenAt}) => DiscoveredServer(
         ip: ip,

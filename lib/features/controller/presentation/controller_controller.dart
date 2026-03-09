@@ -51,7 +51,6 @@ class ControllerController extends StateNotifier<ControllerState> {
   Uint8List _buildPacket() {
     final s = state;
     final nextSeq = _seq++;
-    state = s.copyWith(seq: nextSeq);
     return ControlProtocol.buildPacket(
       seq: nextSeq,
       lx: s.lx,
@@ -67,8 +66,21 @@ class ControllerController extends StateNotifier<ControllerState> {
   }
 
   void _setStateAndSend(ControllerState next) {
+    if (_sameControlState(state, next)) return;
     state = next;
     _sender?.sendNow();
+  }
+
+  bool _sameControlState(ControllerState a, ControllerState b) {
+    return a.lx == b.lx &&
+        a.ly == b.ly &&
+        a.rx == b.rx &&
+        a.ry == b.ry &&
+        a.l2 == b.l2 &&
+        a.r2 == b.r2 &&
+        a.dpadX == b.dpadX &&
+        a.dpadY == b.dpadY &&
+        a.buttons == b.buttons;
   }
 
   void resetNeutral() {
