@@ -377,8 +377,7 @@ class _VehicleControllerSurface extends StatelessWidget {
 
         double lf(double f) => w * f;
         double tf(double f) => h * f;
-        final steeringWidth = (w * 0.36).clamp(300.0, 460.0).toDouble();
-        final steeringHeight = (h * 0.20).clamp(110.0, 180.0).toDouble();
+        final steeringStickSize = math.min(w * 0.36, h * 0.62);
         final pedalRowWidth = (w * 0.30).clamp(280.0, 420.0).toDouble();
         final pedalRowHeight = (h * 0.25).clamp(120.0, 210.0).toDouble();
 
@@ -409,8 +408,8 @@ class _VehicleControllerSurface extends StatelessWidget {
                   Positioned(
                     left: lf(0.06),
                     top: tf(0.10),
-                    width: w * 0.18,
-                    height: h * 0.08,
+                    width: w * 0.22,
+                    height: h * 0.10,
                     child: _PressButton(
                       label: 'LB',
                       active: _isOn(GamepadButton.l1),
@@ -420,8 +419,8 @@ class _VehicleControllerSurface extends StatelessWidget {
                   Positioned(
                     right: lf(0.06),
                     top: tf(0.10),
-                    width: w * 0.18,
-                    height: h * 0.08,
+                    width: w * 0.22,
+                    height: h * 0.10,
                     child: _PressButton(
                       label: 'RB',
                       active: _isOn(GamepadButton.r1),
@@ -457,12 +456,16 @@ class _VehicleControllerSurface extends StatelessWidget {
                   ),
                   Positioned(
                     left: lf(0.05),
-                    bottom: tf(0.06),
-                    width: steeringWidth,
-                    height: steeringHeight,
-                    child: _VehicleSteeringArrows(
-                      directionX: state.dpadX,
-                      onChanged: onSteerChanged,
+                    bottom: tf(0.03),
+                    width: steeringStickSize,
+                    height: steeringStickSize,
+                    child: _AnalogStick(
+                      x: state.lx,
+                      y: 0,
+                      onChanged: (x, _) => onSteerChanged(x.sign),
+                      onReset: () => onSteerChanged(0),
+                      ringColor: const Color(0xFF2D323E),
+                      label: 'L3',
                     ),
                   ),
                   Positioned(
@@ -571,57 +574,6 @@ class _ModeToggleChip extends StatelessWidget {
           ),
         ),
       ),
-    );
-  }
-}
-
-class _VehicleSteeringArrows extends StatelessWidget {
-  final int directionX;
-  final ValueChanged<int> onChanged;
-
-  const _VehicleSteeringArrows({
-    required this.directionX,
-    required this.onChanged,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    Widget arrow({
-      required IconData icon,
-      required bool active,
-      required int direction,
-    }) {
-      return Expanded(
-        child: GestureDetector(
-          onTapDown: (_) => onChanged(direction),
-          onTapUp: (_) => onChanged(0),
-          onTapCancel: () => onChanged(0),
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 80),
-            margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
-            decoration: BoxDecoration(
-              color: active ? const Color(0xFF2F3440) : const Color(0xFF1E2026),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Icon(icon, size: 68, color: Colors.white),
-          ),
-        ),
-      );
-    }
-
-    return Row(
-      children: [
-        arrow(
-          icon: Icons.keyboard_arrow_left,
-          active: directionX == -1,
-          direction: -1,
-        ),
-        arrow(
-          icon: Icons.keyboard_arrow_right,
-          active: directionX == 1,
-          direction: 1,
-        ),
-      ],
     );
   }
 }
