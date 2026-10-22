@@ -4,7 +4,6 @@ Mobile controller app that discovers a Linux joystick server on local network an
 
 ## Demo Photos
 
-![Server Terminal](docs/demo/server.png)
 ![Discovery Screen](docs/demo/findserver.png)
 ![Character Mode](docs/demo/character_surface.jpeg)
 ![Vehicle Mode](docs/demo/vechicle_surface.jpeg)
